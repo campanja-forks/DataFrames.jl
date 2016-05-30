@@ -1,6 +1,7 @@
 module TestStatsModels
 using DataFrames
 using Base.Test
+using Compat
 
 # Tests for statsmodel.jl
 
@@ -71,13 +72,14 @@ m2 = fit(DummyMod, f2, d)
 
 ## Another dummy model type to test fall-through show method
 immutable DummyModTwo <: RegressionModel
-    msg::UTF8String
+    msg::Compat.UTF8String
 end
 
 StatsBase.fit(::Type{DummyModTwo}, ::Matrix, ::Vector) = DummyModTwo("hello!")
 Base.show(io::IO, m::DummyModTwo) = println(io, m.msg)
 
 m2 = fit(DummyModTwo, f, d)
-@show m2
+io = IOBuffer()
+show(io, m2)
 
 end

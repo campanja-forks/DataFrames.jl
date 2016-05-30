@@ -357,9 +357,9 @@ end
 
 function coefnames(mf::ModelFrame)
     if mf.terms.intercept
-        vnames = UTF8String["(Intercept)"]
+        vnames = Compat.UTF8String["(Intercept)"]
     else
-        vnames = UTF8String[]
+        vnames = Compat.UTF8String[]
     end
     # Need to only include active levels
     for term in mf.terms.terms

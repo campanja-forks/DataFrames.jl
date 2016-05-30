@@ -3,7 +3,7 @@
 #'
 #' Returns a string summary of an AbstractDataFrame in a standardized
 #' form. For example, a standard DataFrame with 10 rows and 5 columns
-#' will be summarized as "10x5 DataFrame".
+#' will be summarized as "10×5 DataFrame".
 #'
 #' @param df::AbstractDataFrame The AbstractDataFrame to be summarized.
 #'
@@ -14,7 +14,7 @@
 #' summary(DataFrame(A = 1:10))
 function Base.summary(df::AbstractDataFrame) # -> UTF8String
     nrows, ncols = size(df)
-    return utf8(@sprintf "%dx%d %s" nrows ncols typeof(df))
+    return utf8(@sprintf("%d×%d %s", nrows, ncols, typeof(df)))
 end
 
 #' @description
@@ -328,7 +328,7 @@ function showrows(io::IO,
                   rowindices2::AbstractVector{Int},
                   maxwidths::Vector{Int},
                   splitchunks::Bool = false,
-                  rowlabel::Symbol = symbol("Row"),
+                  rowlabel::Symbol = @compat(Symbol("Row")),
                   displaysummary::Bool = true) # -> Void
     ncols = size(df, 2)
 
@@ -370,19 +370,19 @@ function showrows(io::IO,
         end
 
         # Print table bounding line
-        write(io, '┝')
+        write(io, '├')
         for itr in 1:(rowmaxwidth + 2)
-            write(io, '━')
+            write(io, '─')
         end
-        write(io, '┿')
+        write(io, '┼')
         for j in leftcol:rightcol
             for itr in 1:(maxwidths[j] + 2)
-                write(io, '━')
+                write(io, '─')
             end
             if j < rightcol
-                write(io, '┿')
+                write(io, '┼')
             else
-                write(io, '┥')
+                write(io, '┤')
             end
         end
         write(io, '\n')
@@ -444,7 +444,7 @@ end
 function Base.show(io::IO,
                    df::AbstractDataFrame,
                    splitchunks::Bool = true,
-                   rowlabel::Symbol = symbol("Row"),
+                   rowlabel::Symbol = @compat(Symbol("Row")),
                    displaysummary::Bool = true) # -> Void
     nrows = size(df, 1)
     dsize = displaysize(io)
@@ -522,7 +522,7 @@ end
 function Base.showall(io::IO,
                       df::AbstractDataFrame,
                       splitchunks::Bool = false,
-                      rowlabel::Symbol = symbol("Row"),
+                      rowlabel::Symbol = @compat(Symbol("Row")),
                       displaysummary::Bool = true) # -> Void
     rowindices1 = 1:size(df, 1)
     rowindices2 = 1:0
@@ -580,7 +580,7 @@ function showcols(io::IO, df::AbstractDataFrame) # -> Void
     metadata = DataFrame(Name = _names(df),
                          Eltype = eltypes(df),
                          Missing = colmissing(df))
-    showall(io, metadata, true, symbol("Col #"), false)
+    showall(io, metadata, true, @compat(Symbol("Col #")), false)
     return
 end
 

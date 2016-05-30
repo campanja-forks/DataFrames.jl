@@ -297,7 +297,7 @@ function isnextcol(df::DataFrame, col_ind::Real)
 end
 
 function nextcolname(df::DataFrame)
-    return symbol(string("x", ncol(df) + 1))
+    return @compat(Symbol(string("x", ncol(df) + 1)))
 end
 
 # Will automatically add a new column if needed
@@ -803,9 +803,7 @@ function Base.convert(::Type{DataFrame}, A::Matrix)
     return DataFrame(cols, Index(gennames(n)))
 end
 
-function Base.convert(::Type{DataFrame}, d::Dict)
-    dnames = collect(keys(d))
-    sort!(dnames)
+function _dataframe_from_associative(dnames, d::Associative)
     p = length(dnames)
     p == 0 && return DataFrame()
     columns  = Array(Any, p)
@@ -818,10 +816,24 @@ function Base.convert(::Type{DataFrame}, d::Dict)
             throw(ArgumentError("All columns in Dict must have the same length"))
         end
         columns[j] = DataArray(col)
-        colnames[j] = symbol(name)
+        colnames[j] = Symbol(name)
     end
     return DataFrame(columns, Index(colnames))
 end
+
+function Base.convert(::Type{DataFrame}, d::Associative)
+    dnames = collect(keys(d))
+    return _dataframe_from_associative(dnames, d)
+end
+
+# A Dict is not sorted or otherwise ordered, and it's nicer to return a
+# DataFrame which is ordered in some way
+function Base.convert(::Type{DataFrame}, d::Dict)
+    dnames = collect(keys(d))
+    sort!(dnames)
+    return _dataframe_from_associative(dnames, d)
+end
+
 
 ##############################################################################
 ##

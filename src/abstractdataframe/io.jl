@@ -100,7 +100,7 @@ writetable(filename, df, [keyword options])
 df = DataFrame(A = 1:10)
 writetable("output.csv", df)
 writetable("output.dat", df, separator = ',', header = false)
-writetable("output.dat", df, quotemark = '\'', separator = ',')
+writetable("output.dat", df, quotemark = '\', separator = ',')
 writetable("output.dat", df, header = false)
 ```
 """
@@ -127,7 +127,7 @@ function writetable(filename::AbstractString,
         # When 'append'-ing to a nonempty file,
         # 'header' triggers a check for matching colnames
         if header
-            if any(i -> symbol(file_df[1, i]) != index(df)[i], 1:size(df, 2))
+            if any(i -> @compat(Symbol(file_df[1, i])) != index(df)[i], 1:size(df, 2))
                 throw(KeyError("Column names don't match names in file"))
             end
 
