@@ -49,4 +49,13 @@ module TestGrouping
     @test groupby(DataFrame(A=Int[]), :A).starts == Int[]
     # grouping single row
     @test groupby(DataFrame(A=Int[1]), :A).starts == Int[1]
+
+    # issue #960
+    x = pool(collect(1:20))
+    df = DataFrame(v1=x, v2=x)
+    groupby(df, [:v1, :v2])
+
+    a = DataFrame(x=pool(1:200))
+    b = DataFrame(x=pool(100:300))
+    vcat(a,b)
 end
