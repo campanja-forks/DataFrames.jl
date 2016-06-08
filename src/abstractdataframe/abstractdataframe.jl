@@ -710,7 +710,7 @@ function _colinfo{T<:AbstractDataFrame}(dfs::Vector{T})
                     coltyps[idx] = promote_type(oldtyp, ct)
                 end
                 nonnull_ct[idx] += !_isnullable(col)
-                similars[idx] = expandsimilarpool(similars[idx], df[idx])
+                similars[idx] = expandsimilarpool(similars[idx], col)
             else # new column
                 push!(colindex, cn)
                 push!(coltyps, ct)
