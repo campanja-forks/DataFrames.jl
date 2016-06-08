@@ -58,4 +58,6 @@ module TestGrouping
     a = DataFrame(x=pool(1:200))
     b = DataFrame(x=pool(100:300))
     vcat(a,b)
+
+    by(e->1, DataFrame(x=[]), :x)
 end
