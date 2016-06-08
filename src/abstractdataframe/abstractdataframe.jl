@@ -710,6 +710,7 @@ function _colinfo{T<:AbstractDataFrame}(dfs::Vector{T})
                     coltyps[idx] = promote_type(oldtyp, ct)
                 end
                 nonnull_ct[idx] += !_isnullable(col)
+                similars[idx] = expandsimilarpool(similars[idx], df[idx])
             else # new column
                 push!(colindex, cn)
                 push!(coltyps, ct)
@@ -728,6 +729,20 @@ function _colinfo{T<:AbstractDataFrame}(dfs::Vector{T})
 
     coltyps, colnams, similars
 end
+
+function expandsimilarpool{T,R<:Integer,N}(c1::PooledDataArray{T,R,N}, c2)
+    # expand pool to make room for all levels
+    pool = levels([levels(c1); levels(c2)])
+    # doesn't need any refs
+    norefs = DataArrays.RefArray(Array{DataArrays.DEFAULT_POOLED_REF_TYPE,N}())
+    # keep it compact (update the type of norefs)
+    compact(PooledDataArray(norefs, pool))
+end
+
+function expandsimilarpool(c1, c2)
+    c1
+end
+
 
 ##############################################################################
 ##
