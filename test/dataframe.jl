@@ -308,5 +308,5 @@ module TestDataFrame
     #The expected output
     df4 = DataFrame(Fish = ["Batman", "Bob"], Color = ["Grey", "Red"], Mass = ["18 g", "12 g"])
     @test df2 == df4
-    @test df3 == df4
+    @test df3 == sub(df4,[2,1])
 end

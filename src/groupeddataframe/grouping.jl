@@ -313,6 +313,7 @@ aggregate(gd::GroupedDataFrame, fs)
 * `cols` : a column indicator (Symbol, Int, Vector{Symbol}, etc.)
 * `fs` : a function or vector of functions to be applied to vectors
   within groups; expects each argument to be a column vector
+* `sort`: sort row groups (no sorting by default)
 
 Each `fs` should return a value or vector. All returns must be the
 same length.
@@ -350,7 +351,7 @@ Base.(:|>){T<:Function}(gd::GroupedDataFrame, fs::Vector{T}) = aggregate(gd, fs)
 # Groups DataFrame by cols before applying aggregate
 function aggregate{S <: ColumnIndex, T <:Function}(d::AbstractDataFrame,
                                      cols::@compat(Union{S, AbstractVector{S}}),
-                                     fs::@compat(Union{T, Vector{T}}),
+                                     fs::@compat(Union{T, Vector{T}});
                                      sort::Bool = false)
     aggregate(groupby(d, cols, sort = sort), fs)
 end
