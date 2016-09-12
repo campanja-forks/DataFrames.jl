@@ -112,4 +112,12 @@ module TestJoin
     @test isequal(join(simple_df(0), simple_df(0, :B), kind = :cross), DataFrame(A=Int[], B=Int[]))
     @test isequal(join(simple_df(0), simple_df(2, :B), kind = :cross), DataFrame(A=Int[], B=Int[]))
     @test isequal(join(simple_df(2), simple_df(0, :B), kind = :cross), DataFrame(A=Int[], B=Int[]))
+
+    # issue #960
+    df1 = DataFrame(A = 1:50,
+                    B = 1:50,
+                    C = 1)
+    pool!(df1, :A)
+    pool!(df1, :B)
+    join(df1, df1, on = [:A, :B], kind = :inner)
 end

@@ -162,25 +162,17 @@ module TestIO
     df1w = readtable(winpath; opts1...)
     # df2w = readtable(winpath; opts2...)
 
-    # @test df2 == df1
-    @test normalize_eol!(df1w) == df1
+    # Normalize line endings in both and test equality
+    @test normalize_eol!(df1w) == normalize_eol!(df1)
     # @test normalize_eol!(df2w) == df1
 
     opts1[:nrows] = 3
     opts2[:nrows] = 3
 
-    @test readtable(osxpath; opts1...) == df1[1:3, :]
+    @test normalize_eol!(readtable(osxpath; opts1...)) == df1[1:3, :]
     # @test readtable(osxpath; opts2...) == df1[1:3, :]
     @test normalize_eol!(readtable(winpath; opts1...)) == df1[1:3, :]
     # @test readtable(winpath; opts2...) == df1[1:3, :]
-
-    # opts2[:header] = false
-    # opts2[:skipstart] = 5
-
-    # df2b = readtable(path; opts2...)
-    # names!(df2b, names(df1))
-
-    # @test df2b == df1[1:3]
 
     #test_group("readtable handles custom delimiters.")
 
@@ -236,7 +228,7 @@ module TestIO
     filename = "$data/factors/mixedvartypes.csv"
     df = readtable(filename, makefactors = true)
 
-    @test typeof(df[:factorvar]) == PooledDataArray{UTF8String,UInt32,1}
+    @test typeof(df[:factorvar]) == PooledDataArray{Compat.UTF8String,UInt32,1}
     @test typeof(df[:floatvar]) == DataArray{Float64,1}
 
     # Readtable shouldn't silently drop data when reading highly compressed gz.
@@ -246,7 +238,7 @@ module TestIO
     # Readtable type inference
     filename = "$data/typeinference/bool.csv"
     df = readtable(filename)
-    @test typeof(df[:Name]) == DataArray{UTF8String,1}
+    @test typeof(df[:Name]) == DataArray{Compat.UTF8String,1}
     @test typeof(df[:IsMale]) == DataArray{Bool,1}
     @test df[:IsMale][1] == true
     @test df[:IsMale][4] == false
@@ -257,11 +249,11 @@ module TestIO
     @test typeof(df[:IntlikeColumn]) == DataArray{Float64,1}
     @test typeof(df[:FloatColumn]) == DataArray{Float64,1}
     @test typeof(df[:BoolColumn]) == DataArray{Bool,1}
-    @test typeof(df[:StringColumn]) == DataArray{UTF8String,1}
+    @test typeof(df[:StringColumn]) == DataArray{Compat.UTF8String,1}
 
     filename = "$data/typeinference/mixedtypes.csv"
     df = readtable(filename)
-    @test typeof(df[:c1]) == DataArray{UTF8String,1}
+    @test typeof(df[:c1]) == DataArray{Compat.UTF8String,1}
     @test df[:c1][1] == "1"
     @test df[:c1][2] == "2.0"
     @test df[:c1][3] == "true"
@@ -269,7 +261,7 @@ module TestIO
     @test df[:c2][1] == 1.0
     @test df[:c2][2] == 3.0
     @test df[:c2][3] == 4.5
-    @test typeof(df[:c3]) == DataArray{UTF8String,1}
+    @test typeof(df[:c3]) == DataArray{Compat.UTF8String,1}
     @test df[:c3][1] == "0"
     @test df[:c3][2] == "1"
     @test df[:c3][3] == "f"
@@ -277,7 +269,7 @@ module TestIO
     @test df[:c4][1] == true
     @test df[:c4][2] == false
     @test df[:c4][3] == true
-    @test typeof(df[:c5]) == DataArray{UTF8String,1}
+    @test typeof(df[:c5]) == DataArray{Compat.UTF8String,1}
     @test df[:c5][1] == "False"
     @test df[:c5][2] == "true"
     @test df[:c5][3] == "true"
@@ -288,17 +280,17 @@ module TestIO
     df = readtable(filename)
     @test typeof(df[:n]) == DataArray{Int,1}
     @test df[:n][1] == 1
-    @test typeof(df[:s]) == DataArray{UTF8String,1}
+    @test typeof(df[:s]) == DataArray{Compat.UTF8String,1}
     @test df[:s][1] == "text"
     @test typeof(df[:f]) == DataArray{Float64,1}
     @test df[:f][1] == 2.3
     @test typeof(df[:b]) == DataArray{Bool,1}
     @test df[:b][1] == true
 
-    df = readtable(filename, eltypes = [Int64, UTF8String, Float64, Bool])
+    df = readtable(filename, eltypes = [Int64, Compat.UTF8String, Float64, Bool])
     @test typeof(df[:n]) == DataArray{Int64,1}
     @test df[:n][1] == 1
-    @test typeof(df[:s]) == DataArray{UTF8String,1}
+    @test typeof(df[:s]) == DataArray{Compat.UTF8String,1}
     @test df[:s][1] == "text"
     @test df[:s][4] == "text ole"
     @test typeof(df[:f]) == DataArray{Float64,1}
@@ -307,7 +299,7 @@ module TestIO
     @test df[:b][1] == true
     @test df[:b][2] == false
 
-    df = readtable(filename, eltypes = [Int64, UTF8String, Float64, UTF8String])
+    df = readtable(filename, eltypes = [Int64, Compat.UTF8String, Float64, Compat.UTF8String])
     @test typeof(df[:n]) == DataArray{Int64,1}
     @test df[:n][1] == 1.0
     @test isna(df[:s][3])
@@ -316,21 +308,21 @@ module TestIO
     @test df[:f][1] == 2.3
     @test df[:f][2] == 0.2
     @test df[:f][3] == 5.7
-    @test typeof(df[:b]) == DataArray{UTF8String,1}
+    @test typeof(df[:b]) == DataArray{Compat.UTF8String,1}
     @test df[:b][1] == "T"
     @test df[:b][2] == "FALSE"
 
     # Readtable name normalization
     abnormal = "\u212b"
     ns = [:Å, :_B_C_, :_end]
-    @test !in(symbol(abnormal), ns)
+    @test !in(Symbol(abnormal), ns)
 
     io = IOBuffer(abnormal*",%_B*\tC*,end\n1,2,3\n")
     @test names(readtable(io)) == ns
 
     # With normalization disabled
     io = IOBuffer(abnormal*",%_B*\tC*,end\n1,2,3\n")
-    @test names(readtable(io, normalizenames=false)) == [symbol(abnormal),symbol("%_B*\tC*"),:end]
+    @test names(readtable(io, normalizenames=false)) == [Symbol(abnormal),Symbol("%_B*\tC*"),:end]
 
     # Test writetable with NA and compare to the results
     tf = tempname()
@@ -343,6 +335,7 @@ module TestIO
     isfile(tf) && rm(tf)
     writetable(tf, df, nastring="none")
     @test readcsv(tf) == ["A" "B"; 1 "b"; "none" "none"]
+    rm(tf)
 
     # Test writetable with append
     df1 = DataFrame(a = @data([1, 2, 3]), b = @data([4, 5, 6]))
@@ -384,6 +377,7 @@ module TestIO
     # Enforces matching column count if append == true
     writetable(tf, df3)
     @test_throws DimensionMismatch writetable(tf, df3b, header = false, append = true)
+    rm(tf)
 
     # Quotemarks are escaped
     tf = tempname()
@@ -398,6 +392,7 @@ module TestIO
     # Make sure the ' does get escaped when needed
     writetable(tf, df, quotemark='\'')
     @test readstring(tf) == "'a'\n'who\\'s'\n"
+    rm(tf)
 
     ### Tests for nonstandard string literals
     # Test basic @csv_str usage

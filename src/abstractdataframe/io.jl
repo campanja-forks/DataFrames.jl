@@ -8,8 +8,14 @@ function escapedprint(io::IO, x::Any, escapes::AbstractString)
     print(io, x)
 end
 
-function escapedprint(io::IO, x::AbstractString, escapes::AbstractString)
-    print_escaped(io, x, escapes)
+if VERSION < v"0.5.0-dev+4354"
+    function escapedprint(io::IO, x::AbstractString, escapes::AbstractString)
+        print_escaped(io, x, escapes)
+    end
+else
+    function escapedprint(io::IO, x::AbstractString, escapes::AbstractString)
+        escape_string(io, x, escapes)
+    end
 end
 
 function printtable(io::IO,
@@ -100,7 +106,7 @@ writetable(filename, df, [keyword options])
 df = DataFrame(A = 1:10)
 writetable("output.csv", df)
 writetable("output.dat", df, separator = ',', header = false)
-writetable("output.dat", df, quotemark = '\'', separator = ',')
+writetable("output.dat", df, quotemark = '\', separator = ',')
 writetable("output.dat", df, header = false)
 ```
 """
@@ -127,7 +133,7 @@ function writetable(filename::AbstractString,
         # When 'append'-ing to a nonempty file,
         # 'header' triggers a check for matching colnames
         if header
-            if any(i -> symbol(file_df[1, i]) != index(df)[i], 1:size(df, 2))
+            if any(i -> @compat(Symbol(file_df[1, i])) != index(df)[i], 1:size(df, 2))
                 throw(KeyError("Column names don't match names in file"))
             end
 
@@ -162,9 +168,7 @@ function html_escape(cell::AbstractString)
     return cell
 end
 
-function Base.writemime(io::IO,
-                        ::MIME"text/html",
-                        df::AbstractDataFrame)
+@compat function Base.show(io::IO, ::MIME"text/html", df::AbstractDataFrame)
     n = size(df, 1)
     cnames = _names(df)
     write(io, "<table class=\"data-frame\">")
@@ -174,7 +178,7 @@ function Base.writemime(io::IO,
         write(io, "<th>$column_name</th>")
     end
     write(io, "</tr>")
-    tty_rows, tty_cols = Base.tty_size()
+    tty_rows, tty_cols = _displaysize(io)
     mxrow = min(n,tty_rows)
     for row in 1:mxrow
         write(io, "<tr>")
@@ -255,14 +259,10 @@ end
 #
 ##############################################################################
 
-function Base.writemime(io::IO,
-                        ::MIME"text/csv",
-                        df::AbstractDataFrame)
+@compat function Base.show(io::IO, ::MIME"text/csv", df::AbstractDataFrame)
     printtable(io, df, true, ',')
 end
 
-function Base.writemime(io::IO,
-                        ::MIME"text/tab-separated-values",
-                        df::AbstractDataFrame)
+@compat function Base.show(io::IO, ::MIME"text/tab-separated-values", df::AbstractDataFrame)
     printtable(io, df, true, '\t')
 end

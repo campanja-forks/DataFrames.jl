@@ -19,15 +19,14 @@ my_tests = ["utils.jl",
             "formula.jl",
             "constructors.jl",
             "conversions.jl",
-            # "indexing.jl",
-            "RDA.jl",
             "sort.jl",
             "grouping.jl",
             "join.jl",
             "iteration.jl",
             "duplicates.jl",
             "show.jl",
-            "statsmodel.jl"]
+            "statsmodel.jl",
+            "contrasts.jl"]
 
 println("Running tests:")
 

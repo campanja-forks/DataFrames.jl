@@ -9,15 +9,17 @@ module DataFrames
 ##############################################################################
 
 using Compat
+import Compat.String
 using Reexport
 @reexport using StatsBase
 @reexport using DataArrays
 using GZip
 using SortingAlgorithms
-using Base: Sort, Order
-using Docile
 
-@document
+using FileIO  # remove after read_rda deprecation period
+
+using Base: Sort, Order
+import Base: ==, |>
 
 ##############################################################################
 ##
@@ -32,6 +34,7 @@ export @~,
        @wsv_str,
 
        AbstractDataFrame,
+       AbstractContrasts,
        DataFrame,
        DataFrameRow,
        Formula,
@@ -40,6 +43,10 @@ export @~,
        ModelFrame,
        ModelMatrix,
        SubDataFrame,
+       EffectsCoding,
+       DummyCoding,
+       HelmertCoding,
+       ContrastsCoding,
 
        aggregate,
        by,
@@ -48,6 +55,7 @@ export @~,
        combine,
        complete_cases,
        complete_cases!,
+       setcontrasts!,
        deleterows!,
        describe,
        eachcol,
@@ -65,7 +73,6 @@ export @~,
        pool,
        pool!,
        printtable,
-       read_rda,
        readtable,
        rename!,
        rename,
@@ -74,13 +81,22 @@ export @~,
        stackdf,
        unique!,
        unstack,
-       writetable
+       writetable,
+
+       # Remove after deprecation period
+       read_rda
 
 ##############################################################################
 ##
 ## Load files
 ##
 ##############################################################################
+
+if VERSION < v"0.5.0-dev+2023"
+    _displaysize(x...) = Base.tty_size()
+else
+    const _displaysize = Base.displaysize
+end
 
 for (dir, filename) in [
         ("other", "utils.jl"),
@@ -107,10 +123,10 @@ for (dir, filename) in [
         ("abstractdataframe", "sort.jl"),
         ("dataframe", "sort.jl"),
 
+        ("statsmodels", "contrasts.jl"),
         ("statsmodels", "formula.jl"),
         ("statsmodels", "statsmodel.jl"),
 
-        ("", "RDA.jl"),
         ("", "deprecated.jl")
     ]
 

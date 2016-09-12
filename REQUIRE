@@ -1,8 +1,8 @@
 julia 0.4
-DataArrays 0.2.15
-StatsBase v0.8.0
+DataArrays 0.3.4
+StatsBase 0.8.3
 GZip
 SortingAlgorithms
 Reexport
-Compat 0.7.12
-Docile
+Compat 0.8.4
+FileIO 0.1.2

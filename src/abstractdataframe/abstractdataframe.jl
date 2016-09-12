@@ -1,10 +1,5 @@
 
-@comment """
-# AbstractDataFrame
 """
-
-"""
-
 An abstract type for which all concrete types expose a database-like
 interface.
 
@@ -111,6 +106,9 @@ names!(df::AbstractDataFrame, vals)
 * `df` : the AbstractDataFrame
 * `vals` : column names, normally a Vector{Symbol} the same length as
   the number of columns in `df`
+* `allow_duplicates` : if `false` (the default), an error will be raised
+  if duplicate names are found; if `true`, duplicate names will be suffixed
+  with `_i` (`i` starting at 1 for the first duplicate).
 
 **Result**
 
@@ -122,11 +120,13 @@ names!(df::AbstractDataFrame, vals)
 ```julia
 df = DataFrame(i = 1:10, x = rand(10), y = rand(["a", "b", "c"], 10))
 names!(df, [:a, :b, :c])
+names!(df, [:a, :b, :a])  # throws ArgumentError
+names!(df, [:a, :b, :a], allow_duplicates=true)  # renames second :a to :a_1
 ```
 
 """
-function names!(df::AbstractDataFrame, vals)
-    names!(index(df), vals)
+function names!(df::AbstractDataFrame, vals; allow_duplicates=false)
+    names!(index(df), vals; allow_duplicates=allow_duplicates)
     return df
 end
 
@@ -165,7 +165,7 @@ rename(f::Function, df::AbstractDataFrame)
 
 ```julia
 df = DataFrame(i = 1:10, x = rand(10), y = rand(["a", "b", "c"], 10))
-rename(x -> symbol(uppercase(string(x))), df)
+rename(x -> @compat(Symbol)(uppercase(string(x))), df)
 rename(df, @compat(Dict(:i=>:A, :x=>:X)))
 rename(df, :y, :Y)
 rename!(df, @compat(Dict(:i=>:A, :x=>:X)))
@@ -229,7 +229,7 @@ Base.ndims(::AbstractDataFrame) = 2
 ##############################################################################
 
 Base.similar(df::AbstractDataFrame, dims::Int) =
-    DataFrame([similar(x, dims) for x in columns(df)], copy(index(df)))
+    DataFrame(Any[similar(x, dims) for x in columns(df)], copy(index(df)))
 
 nas{T}(dv::AbstractArray{T}, dims::@compat(Union{Int, Tuple{Vararg{Int}}})) =   # TODO move to datavector.jl?
     DataArray(Array(T, dims), trues(dims))
@@ -255,7 +255,8 @@ function Base.isequal(df1::AbstractDataFrame, df2::AbstractDataFrame)
     return true
 end
 
-function Base.(:(==))(df1::AbstractDataFrame, df2::AbstractDataFrame)
+# Imported in DataFrames.jl for compatibility across Julia 0.4 and 0.5
+function (==)(df1::AbstractDataFrame, df2::AbstractDataFrame)
     size(df1, 2) == size(df2, 2) || return false
     isequal(index(df1), index(df2)) || return false
     eq = true
@@ -551,11 +552,13 @@ Indexes of complete cases (rows without NA's)
 
 ```julia
 nonunique(df::AbstractDataFrame)
+nonunique(df::AbstractDataFrame, cols)
 ```
 
 **Arguments**
 
 * `df` : the AbstractDataFrame
+* `cols` : a column indicator (Symbol, Int, Vector{Symbol}, etc.) specifying the column(s) to compare
 
 **Result**
 
@@ -570,6 +573,7 @@ See also [`unique`]({ref}) and [`unique!`]({ref}).
 df = DataFrame(i = 1:10, x = rand(10), y = rand(["a", "b", "c"], 10))
 df = vcat(df, df)
 nonunique(df)
+nonunique(df, 1)
 ```
 
 """
@@ -586,26 +590,37 @@ function nonunique(df::AbstractDataFrame)
     return res
 end
 
+nonunique(df::AbstractDataFrame, cols::Union{Real, Symbol}) = nonunique(df[[cols]])
+nonunique(df::AbstractDataFrame, cols::Any) = nonunique(df[cols])
+
 unique!(df::AbstractDataFrame) = deleterows!(df, find(nonunique(df)))
+unique!(df::AbstractDataFrame, cols::Any) = deleterows!(df, find(nonunique(df, cols)))
 
 # Unique rows of an AbstractDataFrame.
 Base.unique(df::AbstractDataFrame) = df[!nonunique(df), :]
+Base.unique(df::AbstractDataFrame, cols::Any) = df[!nonunique(df, cols), :]
 
 """
 Delete duplicate rows
 
 ```julia
 unique(df::AbstractDataFrame)
+unique(df::AbstractDataFrame, cols)
 unique!(df::AbstractDataFrame)
+unique!(df::AbstractDataFrame, cols)
 ```
 
 **Arguments**
 
 * `df` : the AbstractDataFrame
+* `cols` :  column indicator (Symbol, Int, Vector{Symbol}, etc.)
+specifying the column(s) to compare.
 
 **Result**
 
-* `::AbstractDataFrame` : the updated version
+* `::AbstractDataFrame` : the updated version of `df` with unique rows.
+When `cols` is specified, the return DataFrame contains complete rows,
+retaining in each case the first instance for which `df[cols]` is unique.
 
 See also [`nonunique`]({ref}).
 
@@ -615,6 +630,7 @@ See also [`nonunique`]({ref}).
 df = DataFrame(i = 1:10, x = rand(10), y = rand(["a", "b", "c"], 10))
 df = vcat(df, df)
 unique(df)   # doesn't modify df
+unique(df, 1)
 unique!(df)  # modifies df
 ```
 
@@ -660,7 +676,7 @@ Base.hcat(df::AbstractDataFrame, x, y...) = hcat!(hcat(df, x), y...)
 
 Base.vcat(df::AbstractDataFrame) = df
 
-Base.vcat(dfs::AbstractDataFrame...) = vcat(collect(dfs))
+Base.vcat(dfs::AbstractDataFrame...) = vcat(AbstractDataFrame[dfs...])
 
 Base.vcat(dfs::Vector{Void}) = dfs
 function Base.vcat{T<:AbstractDataFrame}(dfs::Vector{T})
