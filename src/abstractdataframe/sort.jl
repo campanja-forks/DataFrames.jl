@@ -72,8 +72,8 @@ DFPerm{O<:Ordering, DF<:AbstractDataFrame}(o::O, df::DF) = DFPerm{O,DF}(o,df)
 colordering{O<:Ordering}(o::DFPerm{O}, i::Int) = o.ord
 colordering{V<:AbstractVector}(o::DFPerm{V}, i::Int) = o.ord[i]
 
-getindex(o::DFPerm, i::Int, j::Int) = o.df[i, j]
-getindex(o::DFPerm, a::DataFrameRow, j::Int) = a[j]
+Base.getindex(o::DFPerm, i::Int, j::Int) = o.df[i, j]
+Base.getindex(o::DFPerm, a::DataFrameRow, j::Int) = a[j]
 
 function Sort.lt(o::DFPerm, a, b)
     for i = 1:ncol(o.df)
