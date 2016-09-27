@@ -221,8 +221,7 @@ function latex_escape(cell::AbstractString)
     return cell
 end
 
-function Base.writemime(io::IO,
-                        ::MIME"text/latex",
+function Base.show(::MIME"text/latex", io::IO,
                         df::AbstractDataFrame)
     nrows = size(df, 1)
     ncols = size(df, 2)
