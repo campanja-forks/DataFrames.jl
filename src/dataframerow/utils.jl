@@ -173,10 +173,10 @@ end
 function Base.get(gd::_RowGroupDict, df::DataFrame, row::Int)
     g_row = _get_group_row(gd, df, row)
     if g_row == 0
-      return sub(gd.rperm, 0:-1)
+      return view(gd.rperm, 0:-1)
     else
       gix = gd.groups[g_row]
-      sub(gd.rperm, gd.starts[gix]:gd.stops[gix])
+      view(gd.rperm, gd.starts[gix]:gd.stops[gix])
     end
 end
 
@@ -186,7 +186,7 @@ function Base.getindex(gd::_RowGroupDict, dfr::DataFrameRow)
       throw(KeyError(dfr))
     else
       gix = gd.groups[g_row]
-      sub(gd.rperm, gd.starts[gix]:gd.stops[gix])
+      view(gd.rperm, gd.starts[gix]:gd.stops[gix])
     end
 end
 
