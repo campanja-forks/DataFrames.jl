@@ -24,8 +24,8 @@ module TestGrouping
 
     byf = by(df, :a, df -> DataFrame(bsum = sum(df[:b])))
 
-    @test all(T -> T <: AbstractVector, map(typeof, colwise([sum], df)))
-    @test all(T -> T <: AbstractVector, map(typeof, colwise(sum, df)))
+    @test all(T -> T <: AbstractArray, map(typeof, colwise([sum], df)))
+    @test all(T -> T <: AbstractArray, map(typeof, colwise(sum, df)))
 
     # groupby() without groups sorting
     gd = groupby(df, cols)
