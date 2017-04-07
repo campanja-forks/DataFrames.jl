@@ -107,6 +107,7 @@ function _map_rows!(left_frame::AbstractDataFrame, right_frame::AbstractDataFram
         end
         ixs
     end
+
     update!(ixs::@compat(Void), orig_ixs::AbstractArray, join_ix::Int) = ixs
     function update!(ixs::_RowIndexMap, orig_ixs::AbstractArray, join_ix::Int)
         append!(ixs.orig, orig_ixs)
@@ -235,7 +236,7 @@ join(name, job, kind = :cross)
 """
 function Base.join(df1::AbstractDataFrame,
                    df2::AbstractDataFrame;
-                   on::@compat(Union{Symbol, Vector{Symbol}}) = Symbol[],
+                   on::Union{Symbol, Vector{Symbol}} = Symbol[],
                    kind::Symbol = :inner)
     if kind == :cross
         if on != Symbol[]

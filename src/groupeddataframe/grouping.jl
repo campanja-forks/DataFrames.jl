@@ -89,7 +89,7 @@ function groupby{T}(df::AbstractDataFrame, cols::Vector{T}; sort::Bool = false)
     df_groups = _group_rows(sdf)
     # sort the groups
     if sort
-      group_perm = sortperm(sub(sdf, df_groups.rperm[df_groups.starts]))
+      group_perm = sortperm(view(sdf, df_groups.rperm[df_groups.starts]))
       permute!(df_groups.starts, group_perm)
       permute!(df_groups.stops, group_perm)
     end
@@ -105,7 +105,7 @@ groupby(cols; sort::Bool = false) = x -> groupby(x, cols, sort = sort)
 
 Base.start(gd::GroupedDataFrame) = 1
 Base.next(gd::GroupedDataFrame, state::Int) =
-    (sub(gd.parent, gd.idx[gd.starts[state]:gd.ends[state]]),
+    (view(gd.parent, gd.idx[gd.starts[state]:gd.ends[state]]),
      state + 1)
 Base.done(gd::GroupedDataFrame, state::Int) = state > length(gd.starts)
 Base.length(gd::GroupedDataFrame) = length(gd.starts)
@@ -114,7 +114,7 @@ Base.first(gd::GroupedDataFrame) = gd[1]
 Base.last(gd::GroupedDataFrame) = gd[end]
 
 Base.getindex(gd::GroupedDataFrame, idx::Int) =
-    sub(gd.parent, gd.idx[gd.starts[idx]:gd.ends[idx]])
+    view(gd.parent, gd.idx[gd.starts[idx]:gd.ends[idx]])
 Base.getindex(gd::GroupedDataFrame, I::AbstractArray{Bool}) =
     GroupedDataFrame(gd.parent, gd.cols, gd.idx, gd.starts[I], gd.ends[I])
 
@@ -368,8 +368,8 @@ end
 
 # Groups DataFrame by cols before applying aggregate
 function aggregate{S <: ColumnIndex, T <:Function}(d::AbstractDataFrame,
-                                     cols::@compat(Union{S, AbstractVector{S}}),
-                                     fs::@compat(Union{T, Vector{T}});
+                                     cols::Union{S, AbstractVector{S}},
+                                     fs::Union{T, Vector{T}};
                                      sort::Bool = false)
     aggregate(groupby(d, cols, sort = sort), fs)
 end
