@@ -17,11 +17,11 @@ module TestJoin
                       Job = @data(["Lawyer", "Doctor", "Florist", NA, "Farmer"]))
 
     # (Tests use current column ordering but don't promote it)
-    right = outer[(!).(isna(outer[:Job])), [:Name, :ID, :Job]]
-    left = outer[(!).(isna(outer[:Name])), :]
-    inner = left[(!).(isna(left[:Job])), :]
+    right = outer[(!).(isna.(outer[:Job])), [:Name, :ID, :Job]]
+    left = outer[(!).(isna.(outer[:Name])), :]
+    inner = left[(!).(isna.(left[:Job])), :]
     semi = unique(inner[:, [:Name, :ID]])
-    anti = left[isna(left[:Job]), [:Name, :ID]]
+    anti = left[isna.(left[:Job]), [:Name, :ID]]
 
     @test isequal(join(name, job, on = :ID), inner)
     @test isequal(join(name, job, on = :ID, kind = :inner), inner)
@@ -50,9 +50,9 @@ module TestJoin
     pouter = DataFrame(Name = @data(["John Doe", "Jane Doe", "Jane Doe", "Joe Blogs", NA]),
                       ID = @pdata([1, 2, 2, 3, 4]),
                       Job = @data(["Lawyer", "Doctor", "Florist", NA, "Farmer"]))
-    pright = pouter[!isna(pouter[:Job]), [:Name, :ID, :Job]]
-    pleft = pouter[!isna(pouter[:Name]), :]
-    pinner = pleft[!isna(pleft[:Job]), :]
+    pright = pouter[(!).(isna.(pouter[:Job])), [:Name, :ID, :Job]]
+    pleft = pouter[(!).(isna.(pouter[:Name])), :]
+    pinner = pleft[(!).(isna.(pleft[:Job])), :]
     @test isequal(join(pname, pjob, on = :ID), pinner)
     @test isequal(join(pname, pjob, on = :ID, kind = :inner), pinner)
     @test isequal(join(pname, pjob, on = :ID, kind = :outer), pouter)
